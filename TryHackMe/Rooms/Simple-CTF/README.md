@@ -1,4 +1,4 @@
-# Simple CTF -- TryHackMe Writeup -- Enumeration, Exploitation, and Privilege Escalation
+# Simple CTF -- CTF Writeup -- Enumeration, Exploitation, and Privilege Escalation
 
 ## Target
 
