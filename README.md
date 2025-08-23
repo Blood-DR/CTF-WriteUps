@@ -1,18 +1,12 @@
-\# CTF Writeups
+# CTF Writeups
 
 
+## TryHackMe
+- [Basic Pentesting](TryHackMe/Rooms/Basic-Pentesting/README.md)
 
 
+## CTF Events
 
-\## TryHackMe
-
-\- \[Basic Pentesting](TryHackMe/Rooms/Basic-Pentesting/README.md)
-
-
-
-
-
-\## CTF Events
 
 
 
