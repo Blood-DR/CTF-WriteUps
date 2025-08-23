@@ -1,4 +1,4 @@
-# HackIT CTF Walkthrough
+# RootMe CTF Walkthrough
 
 ## Nmap Scan
 
