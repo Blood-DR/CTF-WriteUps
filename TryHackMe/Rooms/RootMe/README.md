@@ -27,7 +27,7 @@ nmap -sC -sV -p 22,80 10.10.183.212
 |_http-title: HackIT - Home
 ```
 
-> ⚠️ Note: Although the server reports Apache `2.4.41`, the challenge expects version `2.4.29`.
+> Note: Although the server reports Apache `2.4.41`, the challenge expects version `2.4.29`.
 
 ## Directory Enumeration
 
