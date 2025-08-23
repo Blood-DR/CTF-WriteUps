@@ -6,7 +6,7 @@
 
 \## TryHackMe
 
-\- \[Basic Pentesting](TryHackMe/Rooms/Basic Pentesting/basicpentest.md)
+\- \[Basic Pentesting](TryHackMe/Rooms/Basic%20Pentesting/basicpentest.md)
 
 
 
