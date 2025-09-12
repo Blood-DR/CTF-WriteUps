@@ -102,7 +102,7 @@ We need to send the picture to 'QXJlYTUx' as soon as possible!
 By,
 Agent R
 ```
-- Base64 decoded (`QXJlYTUx`) → `Area51` — used as agent J's password.
+- Base64 decoded (`QXJlYTUx`) → `Area51` — thought to be used as agent J's password, however is the steganography password.
 
 ### Extracting steganography from `cute-alien.jpg`
 ```bash
