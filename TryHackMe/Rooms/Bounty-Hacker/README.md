@@ -1,4 +1,6 @@
-# CTF Writeup — FTP to Root via SUID `tar` (TryHackMe style)
+# Bounty-Hacker -- CTF Writeup -- FTP Enumeration, SSH Brute Force, and Privilege Escalation via tar
+
+
 
 > Short summary  
 > Gained initial access via anonymous FTP which contained a username hint and a wordlist. Performed a password guess (Hydra) against SSH for `lin`, obtained a user shell and `user.txt`. Ran linPEAS to enumerate privilege escalation vectors and discovered `tar` with SUID. Used a known GTFObins sudo `tar` abuse to spawn a root shell and read `root.txt`.
