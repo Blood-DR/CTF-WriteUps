@@ -6,6 +6,9 @@
 - [RootMe](TryHackMe/Rooms/RootMe/README.md)
 - [Simple-CTF](TryHackMe/Rooms/Simple-CTF/README.md)
 - [Bounty-Hacker](TryHackMe/Rooms/Bounty-Hacker/README.md)
+- [Agent-Sudo](TryHackMe/Rooms/Agent-Sudo/README.md)
+
+
 
 
 ## CTF Events
