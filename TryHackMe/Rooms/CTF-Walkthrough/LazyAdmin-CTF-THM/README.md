@@ -75,7 +75,7 @@ Drilling into `/content/` with gobuster revealed:
 ## Detailed Steps (Integrated with Verification Points)
 
 ### Step 1 — Find credentials in backup / config artifacts
-- A directory listing under `/home/itguy` (found after getting a shell) contained `mysql_login.txt` in the narrative; but before shelling the system we discovered an apparent backup / config file in `/content/` or attachments that contained credential material. In this case the CTF notes show a found credential pair from a mysql backup or file with the following entries:
+- A directory listing under `/home/itguy` (found after getting a shell) contained `mysql_login.txt` in the narrative; but before shelling the system we discovered an apparent backup file in `/content/inc` that contained credential material. In this case the CTF notes show a found credential pair from a mysql backup or file with the following entries:
 
 ```
 admin -> manager
