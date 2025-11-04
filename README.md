@@ -1,18 +1,16 @@
-# CTF Writeups
+
+## CTF Pen Test Reports (Oldest First)
+- [Basic Pentesting](TryHackMe/Rooms/Pen-Test-Reports/Basic-Pentesting/README.md) - TryHackMe - Easy box
+- [RootMe](TryHackMe/Rooms/Pen-Test-Reports/RootMe/README.md) - TryHackMe - Easy box
+- [Simple-CTF](TryHackMe/Rooms/Pen-Test-Reports/Simple-CTF/README.md) - TryHackMe - Easy box
+- [Bounty-Hacker](TryHackMe/Rooms/Pen-Test-Reports/Bounty-Hacker/README.md) - TryHackMe - Easy box
+- [Agent-Sudo](TryHackMe/Rooms/Pen-Test-Reports/Agent-Sudo/README.md) - TryHackMe - Easy box
+- [Wonderland](TryHackMe/Rooms/Pen-Test-Reports/Wonderland-CTF/README.md) - TryHackMe - Medium box
 
 
-## TryHackMe
-- [Basic Pentesting](TryHackMe/Rooms/Basic-Pentesting/README.md)
-- [RootMe](TryHackMe/Rooms/RootMe/README.md)
-- [Simple-CTF](TryHackMe/Rooms/Simple-CTF/README.md)
-- [Bounty-Hacker](TryHackMe/Rooms/Bounty-Hacker/README.md)
-- [Agent-Sudo](TryHackMe/Rooms/Agent-Sudo/README.md)
-- [Wonderland](TryHackMe/Rooms/Wonderland-CTF/README.md)
+## CTF Walkthroughs (Oldest First)
 
 
-
-## CTF Events
-
-
+## CTF Events (Oldest First)
 
 
