@@ -152,7 +152,7 @@ itguy
 $ ls /home/itguy
 ... mysql_login.txt  user.txt
 $ cat /home/itguy/user.txt
-THM{63e5bce9271952aad1113b6f1ac28a07}
+THM{...}
 ```
 **Verification:** user flag located at `/home/itguy/user.txt`.
 
@@ -192,7 +192,7 @@ root
 **Verification:** Root shell obtained; root flag retrieved at `/root/root.txt`:
 ```
 $ cat /root/root.txt
-THM{6637f41d0177b6f37cb20d775124699f}
+THM{...}
 ```
 
 ---
