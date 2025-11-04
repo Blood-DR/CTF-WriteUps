@@ -1,5 +1,5 @@
 
-## CTF Pen Test Reports (Oldest First)
+## CTF - Pen Test Report style (Oldest First)
 - [Basic Pentesting](TryHackMe/Rooms/Pen-Test-Reports/Basic-Pentesting/README.md) - TryHackMe - Easy box
 - [RootMe](TryHackMe/Rooms/Pen-Test-Reports/RootMe/README.md) - TryHackMe - Easy box
 - [Simple-CTF](TryHackMe/Rooms/Pen-Test-Reports/Simple-CTF/README.md) - TryHackMe - Easy box
@@ -8,7 +8,7 @@
 - [Wonderland](TryHackMe/Rooms/Pen-Test-Reports/Wonderland-CTF/README.md) - TryHackMe - Medium box
 
 
-## CTF Walkthroughs (Oldest First)
+## CTF - Walkthrough Report style(Oldest First)
 
 
 ## CTF Events (Oldest First)
