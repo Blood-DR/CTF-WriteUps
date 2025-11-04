@@ -1,22 +1,20 @@
----
-title: "THM — SweetRice CMS RCE"
-ctf: "TryHackMe / THM (lab)"
-category: "Web / RCE"
-difficulty: "Easy - Medium"
-tags: ["web","rce","cms","sweetrice"]
-author: "0xBlood"
-team: "solo"
-date: "2025-11-05"
-severity: "High"
-impact: "Remote Code Execution (www-data -> root via sudo misconfig)"
-cvss_score: "9.8 / 10 (Critical)"
-cwe_id: "CWE-94: Improper Control of Generation of Code"
-flag_format: "THM{...}"
-solution_time: "~1.5 hours"
-platform: "TryHackMe (lab)"
----
+# LazyAdmin -- CTF Writeup -- SweetRice CMS RCE (Web / PrivEsc)
 
-# THM — SweetRice CMS RCE (Web / PrivEsc)
+- title: "THM — SweetRice CMS RCE"
+- ctf: "TryHackMe / THM (lab)"
+- category: "Web / RCE"
+- difficulty: "Easy - Medium"
+- tags: ["web","rce","cms","sweetrice"]
+- author: "0xBlood"
+- team: "solo"
+- date: "2025-11-05"
+- severity: "High"
+- impact: "Remote Code Execution (www-data -> root via sudo misconfig)"
+- cvss_score: "9.8 / 10 (Critical)"
+- cwe_id: "CWE-94: Improper Control of Generation of Code"
+- flag_format: "THM{...}"
+- solution_time: "~1.5 hours"
+- platform: "TryHackMe (lab)"
 
 ### TL;DR / Summary
 > **Objective:** Gain user and root on a vulnerable SweetRice CMS instance.  
