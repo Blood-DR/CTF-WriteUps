@@ -9,8 +9,8 @@
 
 
 ## CTF - Walkthrough Report style(Oldest First)
+- [LazyAdmin](TryHackMe/Rooms/CTF-Walkthrough/LazyAdmin-CTF-THM/README.md) - TryHackMe - Medium box
 
 
 ## CTF Events (Oldest First)
-
 
