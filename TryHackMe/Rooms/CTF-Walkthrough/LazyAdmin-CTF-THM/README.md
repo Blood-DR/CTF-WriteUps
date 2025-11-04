@@ -4,7 +4,7 @@ ctf: "TryHackMe / THM (lab)"
 category: "Web / RCE"
 difficulty: "Easy - Medium"
 tags: ["web","rce","cms","sweetrice"]
-author: "Damien Rees"
+author: "0xBlood"
 team: "solo"
 date: "2025-11-05"
 severity: "High"
