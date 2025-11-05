@@ -1,20 +1,22 @@
-# LazyAdmin -- CTF Writeup -- SweetRice CMS RCE (Web / PrivEsc)
+---
+title: "THM — SweetRice CMS RCE"
+ctf: "TryHackMe / THM (lab)"
+category: "Web / RCE"
+difficulty: "Easy - Medium"
+tags: ["web","rce","cms","sweetrice"]
+author: "0xBlood"
+team: "solo"
+date: "2025-11-05"
+severity: "High"
+impact: "Remote Code Execution (www-data -> root via sudo misconfig)
+cvss_score: "9.8 / 10 (Critical)"
+cwe_id: "CWE-94: Improper Control of Generation of Code"
+flag_format: "THM{...}"
+solution_time: "~1.5 hours"
+platform: "TryHackMe (lab)"
+---
 
-- title: "THM — SweetRice CMS RCE"
-- ctf: "TryHackMe / THM (lab)"
-- category: "Web / RCE"
-- difficulty: "Easy - Medium"
-- tags: ["web","rce","cms","sweetrice"]
-- author: "0xBlood"
-- team: "solo"
-- date: "2025-11-05"
-- severity: "High"
-- impact: "Remote Code Execution (www-data -> root via sudo misconfig)"
-- cvss_score: "9.8 / 10 (Critical)"
-- cwe_id: "CWE-94: Improper Control of Generation of Code"
-- flag_format: "THM{...}"
-- solution_time: "~1.5 hours"
-- platform: "TryHackMe (lab)"
+# THM — SweetRice CMS RCE (Web / PrivEsc)
 
 ### TL;DR / Summary
 > **Objective:** Gain user and root on a vulnerable SweetRice CMS instance.  
@@ -75,7 +77,7 @@ Drilling into `/content/` with gobuster revealed:
 ## Detailed Steps (Integrated with Verification Points)
 
 ### Step 1 — Find credentials in backup / config artifacts
-- A directory listing under `/home/itguy` (found after getting a shell) contained `mysql_login.txt` in the narrative; but before shelling the system we discovered an apparent backup file in `/content/inc` that contained credential material. In this case the CTF notes show a found credential pair from a mysql backup or file with the following entries:
+- A directory listing under `/home/itguy` (found after getting a shell) contained `mysql_login.txt` in the narrative; but before shelling the system we discovered an apparent backup / config file in `/content/` or attachments that contained credential material. In this case the CTF notes show a found credential pair from a mysql backup or file with the following entries:
 
 ```
 admin -> manager
@@ -150,7 +152,7 @@ itguy
 $ ls /home/itguy
 ... mysql_login.txt  user.txt
 $ cat /home/itguy/user.txt
-THM{...}
+THM{63e5bce9271952aad1113b6f1ac28a07}
 ```
 **Verification:** user flag located at `/home/itguy/user.txt`.
 
@@ -190,7 +192,7 @@ root
 **Verification:** Root shell obtained; root flag retrieved at `/root/root.txt`:
 ```
 $ cat /root/root.txt
-THM{...}
+THM{6637f41d0177b6f37cb20d775124699f}
 ```
 
 ---
