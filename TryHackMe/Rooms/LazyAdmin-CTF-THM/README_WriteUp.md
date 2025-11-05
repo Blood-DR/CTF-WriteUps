@@ -8,7 +8,7 @@ author: "0xBlood"
 team: "solo"
 date: "2025-11-05"
 severity: "High"
-impact: "Remote Code Execution (www-data -> root via sudo misconfig)
+impact: "Remote Code Execution (www-data -> root via sudo misconfig)"
 cvss_score: "9.8 / 10 (Critical)"
 cwe_id: "CWE-94: Improper Control of Generation of Code"
 flag_format: "THM{...}"
