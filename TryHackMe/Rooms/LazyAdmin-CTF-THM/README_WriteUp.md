@@ -1,3 +1,6 @@
+
+# THM — SweetRice CMS RCE (Web / PrivEsc)
+
 ---
 title: "THM — SweetRice CMS RCE"
 ctf: "TryHackMe / THM (lab)"
@@ -15,8 +18,6 @@ flag_format: "THM{...}"
 solution_time: "~1.5 hours"
 platform: "TryHackMe (lab)"
 ---
-
-# THM — SweetRice CMS RCE (Web / PrivEsc)
 
 ### TL;DR / Summary
 > **Objective:** Gain user and root on a vulnerable SweetRice CMS instance.  
